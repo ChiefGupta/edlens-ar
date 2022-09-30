@@ -1,0 +1,57 @@
+/* CSS files add styling rules to your content */
+
+body {
+    font-family: helvetica, arial, sans-serif;
+    margin: 2em;
+  }
+  
+  h1 {
+    font-style: italic;
+    color: #373fff;
+  }
+  
+  #container {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 3;
+      background: #000000;
+      opacity: 0.9;
+      visibility: hidden;
+  }
+  
+  #recognized {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 20px;
+      color: #ffffff;
+      visibility: hidden;
+  }
+  
+  #recognize-text {
+      position: absolute;
+      top: 90%;
+      left: 40%;
+      transform: translate(-50%, -50%);
+      z-index: 2;
+      width: 80px;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: 10px;
+  }
+  
+  #recognize-image {
+      position: absolute;
+      top: 90%;
+      left: 60%;
+      transform: translate(-50%, -50%);
+      z-index: 1;
+      width: 80px;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: 10px;
+  }
