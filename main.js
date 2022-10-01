@@ -4,11 +4,6 @@ import { GLTFLoader } from './libs/three.js-r132/examples/jsm/loaders/GLTFLoader
 
 document.addEventListener('DOMContentLoaded', () => {
   const initialize = async () => {
-    let frame = captureVideoFrame("video", "png");
-    frame = frame.dataUri;
-    let ocrResult = writtenOCR(frame);
-
-    // create AR object
     const arButton = document.querySelector("#ar-button");
 
     // check and request webxr session 
@@ -30,8 +25,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const loader = new GLTFLoader();
     
-    ocrResult = ocrResult.toLowerCase();
-    switch (ocrResult) {
+    
+
+
+    function showModel(ocrWord){
+      ocrWord = ocrWord.toLowerCase();
+      switch (ocrWord) {
       case 'duck':
         loader.load('./assets/models/Duck.gltf', function (gltf) {
           let duck = gltf.scene.children[0];
@@ -40,14 +39,18 @@ document.addEventListener('DOMContentLoaded', () => {
           scene.add(gltf.scene);
         });
         break;
+      }
     }
-
+    
     const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
     scene.add(light);
 
     renderer.xr.addEventListener("sessionstart", (e) => {
       console.log("session start");
     });
+
+    
+
     renderer.xr.addEventListener("sessionend", () => {
       console.log("session end");
     });
@@ -60,13 +63,22 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       renderer.xr.enabled = true;
+
+
       renderer.xr.setReferenceSpaceType('local');
+
+
       await renderer.xr.setSession(currentSession);
       arButton.textContent = "End";
 
       renderer.setAnimationLoop(() => {
         renderer.render(scene, camera);
+        let frame = captureVideoFrame("video", "png");
       });
+      frame = frame.dataUri;
+      let ocrResult = writtenOCR(frame);
+      showModel(ocrResult);
+
     }
     const end = async () => {
       currentSession.end();
@@ -83,6 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   initialize();
+  
 });
 
 // Capture video frame
@@ -123,10 +136,10 @@ function captureVideoFrame(video, format) {
 // OCR API
 function writtenOCR(frame) {
   fetch('https://hf.space/embed/tomofi/MaskTextSpotterV3-OCR/+/api/predict/', {
-    // fetch('https://vision.googleapis.com/v1/images:annotate?key=AIzaSyAUoNOlhCK2chd2UJGOZA4uYEHxztzuh4M', {
+  // fetch('https://vision.googleapis.com/v1/images:annotate?key=AIzaSyBFe63SsyUnk07oPv27F8DHZJBSWSUCrrg', {
     method: "POST",
     body: JSON.stringify({
-      "data": ["data:" + frame]
+      data: ["data:" + frame],
     }),
     headers: {
       "Content-Type": "application/json"
@@ -141,31 +154,10 @@ function writtenOCR(frame) {
       console.log("arrayLength is: " + arrayLength);
       if (arrayLength == 0) {
         window.location.reload();
-        // recognized.innerHTML = "Please scan one more time...";
-        //     setTimeout(() => {
-        //         container.setAttribute("style", "visibility: hidden");
-        //         recognized.setAttribute("style", "visibility: hidden");
-        //     }, 2000);
-        // } else {
         let result = json_response.data[1].data[0][0];
         console.log("OCR is: " + result);
         return result;
-
-        //     switch (result) {
-        //         case "TAJMAHAL":
-        //         case "Tajmahal":
-        //         case "tajmahal":
-        //             recognized.innerHTML = "Monument: " + result;
-        //             break;
-        //         default:
-        //             recognized.innerHTML = "I see: " + result;
-        //         // code block
-        //     }
-        //     setTimeout(() => {
-        //         container.setAttribute("style", "visibility: hidden");
-        //         recognized.setAttribute("style", "visibility: hidden");
-        //     }, 2000);
-        // }
       }
     })
 }
+
