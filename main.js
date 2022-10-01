@@ -1,13 +1,15 @@
 import {loadGLTF} from "./libs/loader.js";
+
 const THREE = window.MINDAR.IMAGE.THREE;
-let recognized = document.querySelector("#recognized");
-let container = document.querySelector("#container");
 
 document.addEventListener('DOMContentLoaded', () => {
   const start = async() => {
+    let frame = captureVideoFrame("video", "png");
+    frame = frame.dataUri;
+    let ocrResult = writtenOCR(frame);
     const mindarThree = new window.MINDAR.IMAGE.MindARThree({
       container: document.body,
-      imageTargetSrc: './assets/targets/musicband.mind',
+      imageTargetSrc: './assets/kanji.mind',
       maxTrack: 5,
     });
     const {renderer, scene, camera} = mindarThree;
@@ -15,24 +17,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const light = new THREE.HemisphereLight( 0xffffff, 0xbbbbff, 1 );
     scene.add(light);
 
-    const raccoon = await loadGLTF('./assets/models/musicband-raccoon/scene.gltf');
-    raccoon.scene.scale.set(0.1, 0.1, 0.1);
-    raccoon.scene.position.set(0, -0.4, 0);
+    switch(ocrResult){
+      case "Fox" : const raccoon = await loadGLTF('./assets/Fox.gltf');
+      raccoon.scene.scale.set(0.1, 0.1, 0.1);
+      raccoon.scene.position.set(0, -0.4, 0);
+      const raccoonAnchor = mindarThree.addAnchor(0);
+      raccoonAnchor.group.add(raccoon.scene)
+      break;
 
-    const bear = await loadGLTF('./assets/models/musicband-bear/scene.gltf');
-    bear.scene.scale.set(0.1, 0.1, 0.1);
-    bear.scene.position.set(0, -0.4, 0);
-
-    const raccoonAnchor = mindarThree.addAnchor(0);
-    raccoonAnchor.group.add(raccoon.scene);
-
-    const bearAnchor = mindarThree.addAnchor(1);
-    bearAnchor.group.add(bear.scene);
+      case "Duck" : const bear = await loadGLTF('./assets/Duck.gltf');
+      bear.scene.scale.set(0.1, 0.1, 0.1);
+      bear.scene.position.set(0, -0.4, 0);
+      const bearAnchor = mindarThree.addAnchor(1);
+      bearAnchor.group.add(bear.scene);
+      break;
+    }
 
     await mindarThree.start();
-    let frame = captureVideoFrame("video", "png");
-    frame = frame.dataUri;
-    writtenOCR(frame);
     renderer.setAnimationLoop(() => {
       renderer.render(scene, camera);
     });
@@ -92,8 +93,9 @@ function writtenOCR(frame) {
       .then(function (json_response) {
           let arrayLength = json_response.data[1].data;
           console.log("arrayLength is: " + arrayLength);
-          // if (arrayLength == 0) {
-          //     // recognized.innerHTML = "Please scan one more time...";
+          if (arrayLength == 0) {
+            window.location.reload();
+              // recognized.innerHTML = "Please scan one more time...";
           //     setTimeout(() => {
           //         container.setAttribute("style", "visibility: hidden");
           //         recognized.setAttribute("style", "visibility: hidden");
@@ -101,6 +103,7 @@ function writtenOCR(frame) {
           // } else {
               let result = json_response.data[1].data[0][0];
               console.log("OCR is: " + result);
+              return result;
 
           //     switch (result) {
           //         case "TAJMAHAL":
@@ -117,5 +120,5 @@ function writtenOCR(frame) {
           //         recognized.setAttribute("style", "visibility: hidden");
           //     }, 2000);
           // }
-      })
+      }})
 }
