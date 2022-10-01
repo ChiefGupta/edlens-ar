@@ -1,6 +1,6 @@
 import * as THREE from './libs/three.js-r132/build/three.module.js';
-import {GLTFLoader} from './libs/three.js-r132/examples/jsm/loaders/GLTFLoader.js'
-import {ARButton} from './libs/three.js-r132/examples/jsm/webxr/ARButton.js'
+import { GLTFLoader } from './libs/three.js-r132/examples/jsm/loaders/GLTFLoader.js'
+import { ARButton } from './libs/three.js-r132/examples/jsm/webxr/ARButton.js'
 
 document.addEventListener('DOMContentLoaded', () => {
   const initialize = async () => {
@@ -10,69 +10,72 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // create AR object
 
+    const arButton = document.querySelector("#ar-button");
+
+    // check and request webxr session 
+    const supported = navigator.xr && await navigator.xr.isSessionSupported('immersive-ar');
+    if (!supported) {
+      arButton.textContent = "Not Supported";
+      arButton.disabled = true;
+      return;
+    }
+
+    // build three.js scene
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera();
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    document.body.appendChild(renderer.domElement);
+
+    // create AR object
+    const loader = new GLTFLoader();
+    loader.load('./assets/models/Duck.gltf', function (gltf) {
+      let duck = gltf.scene.children[0];
+      duck.scale.set(0.01, 0.01, 0.01);
+      duck.position.set(0, -5, -5);
+      scene.add(gltf.scene);
+    });
 
     const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
     scene.add(light);
 
-    const reticleGeometry = new THREE.RingGeometry(0.15, 0.2, 32).rotateX(- Math.PI / 2);
-    const reticleMaterial = new THREE.MeshBasicMaterial();
-    const reticle = new THREE.Mesh(reticleGeometry, reticleMaterial);
-    reticle.matrixAutoUpdate = false;
-    reticle.visible = false;
-    scene.add(reticle);
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.xr.enabled = true;
-
-    const arButton = ARButton.createButton(renderer, { requiredFeatures: ['hit-test'], optionalFeatures: ['dom-overlay'], domOverlay: { root: document.body } });
-    document.body.appendChild(renderer.domElement);
-    document.body.appendChild(arButton);
-
-    const controller = renderer.xr.getController(0);
-    scene.add(controller);
-    const loader = new GLTFLoader();
-    controller.addEventListener('select', () => {
-      loader.load('./assets/models/Duck.gltf', function(gltf) {
-        let duck = gltf.scene.children[0];
-        duck.scale.set(0.01, 0.01, 0.01);
-        duck.position.set(0, 0, -5);
-        duck.position.applyMatrix4(controller.matrixWorld);
-        duck.quaternion.setFromRotationMatrix(controller.matrixWorld);
-        scene.add(gltf.scene);
-      })
+    renderer.xr.addEventListener("sessionstart", (e) => {
+      console.log("session start");
     });
-
-    renderer.xr.addEventListener("sessionstart", async (e) => {
-      const session = renderer.xr.getSession();
-      const viewerReferenceSpace = await session.requestReferenceSpace("viewer");
-      const hitTestSource = await session.requestHitTestSource({ space: viewerReferenceSpace });
-
-      renderer.setAnimationLoop((timestamp, frame) => {
-        if (!frame) return;
-
-        const hitTestResults = frame.getHitTestResults(hitTestSource);
-
-        if (hitTestResults.length) {
-          const hit = hitTestResults[0];
-          const referenceSpace = renderer.xr.getReferenceSpace(); // ARButton requested 'local' reference space
-          const hitPose = hit.getPose(referenceSpace);
-
-          reticle.visible = true;
-          reticle.matrix.fromArray(hitPose.transform.matrix);
-        } else {
-          reticle.visible = false;
-        }
-
-        renderer.render(scene, camera);
-      });
-    });
-
     renderer.xr.addEventListener("sessionend", () => {
       console.log("session end");
+    });
+
+    let currentSession = null;
+    const start = async () => {
+      currentSession = await navigator.xr.requestSession('immersive-ar', {
+        optionalFeatures: ['dom-overlay'],
+        domOverlay: { root: document.body }
+      });
+
+      renderer.xr.enabled = true;
+      renderer.xr.setReferenceSpaceType('local');
+      await renderer.xr.setSession(currentSession);
+      arButton.textContent = "End";
+
+      renderer.setAnimationLoop(() => {
+        renderer.render(scene, camera);
+      });
+    }
+    const end = async () => {
+      currentSession.end();
+      renderer.setAnimationLoop(null);
+      renderer.clear();
+      arButton.style.display = "none";
+    }
+    arButton.addEventListener('click', () => {
+      if (currentSession) {
+        end();
+      } else {
+        start();
+      }
     });
 
   }
