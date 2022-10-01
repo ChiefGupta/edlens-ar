@@ -1,5 +1,7 @@
 import {loadGLTF} from "./libs/loader.js";
 const THREE = window.MINDAR.IMAGE.THREE;
+let recognized = document.querySelector("#recognized");
+let container = document.querySelector("#container");
 
 document.addEventListener('DOMContentLoaded', () => {
   const start = async() => {
@@ -29,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     await mindarThree.start();
     let frame = captureVideoFrame("video", "png");
+    frame = frame.dataUri;
     writtenOCR(frame);
     renderer.setAnimationLoop(() => {
       renderer.render(scene, camera);
@@ -89,30 +92,30 @@ function writtenOCR(frame) {
       .then(function (json_response) {
           let arrayLength = json_response.data[1].data;
           console.log("arrayLength is: " + arrayLength);
-          if (arrayLength == 0) {
-              recognized.innerHTML = "Please scan one more time...";
-              setTimeout(() => {
-                  container.setAttribute("style", "visibility: hidden");
-                  recognized.setAttribute("style", "visibility: hidden");
-              }, 2000);
-          } else {
+          // if (arrayLength == 0) {
+          //     // recognized.innerHTML = "Please scan one more time...";
+          //     setTimeout(() => {
+          //         container.setAttribute("style", "visibility: hidden");
+          //         recognized.setAttribute("style", "visibility: hidden");
+          //     }, 2000);
+          // } else {
               let result = json_response.data[1].data[0][0];
               console.log("OCR is: " + result);
 
-              switch (result) {
-                  case "TAJMAHAL":
-                  case "Tajmahal":
-                  case "tajmahal":
-                      recognized.innerHTML = "Monument: " + result;
-                      break;
-                  default:
-                      recognized.innerHTML = "I see: " + result;
-                  // code block
-              }
-              setTimeout(() => {
-                  container.setAttribute("style", "visibility: hidden");
-                  recognized.setAttribute("style", "visibility: hidden");
-              }, 2000);
-          }
+          //     switch (result) {
+          //         case "TAJMAHAL":
+          //         case "Tajmahal":
+          //         case "tajmahal":
+          //             recognized.innerHTML = "Monument: " + result;
+          //             break;
+          //         default:
+          //             recognized.innerHTML = "I see: " + result;
+          //         // code block
+          //     }
+          //     setTimeout(() => {
+          //         container.setAttribute("style", "visibility: hidden");
+          //         recognized.setAttribute("style", "visibility: hidden");
+          //     }, 2000);
+          // }
       })
 }
