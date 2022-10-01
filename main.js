@@ -25,11 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const loader = new GLTFLoader();
     
-    
-
-
-    function showModel(ocrWord){
-      ocrWord = ocrWord.toLowerCase();
+    let ocrWord = ocrWord.toLowerCase();
       switch (ocrWord) {
       case 'duck':
         loader.load('./assets/models/Duck.gltf', function (gltf) {
@@ -73,11 +69,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       renderer.setAnimationLoop(() => {
         renderer.render(scene, camera);
-        let frame = captureVideoFrame("video", "png");
+        
       });
-      frame = frame.dataUri;
-      let ocrResult = writtenOCR(frame);
-      showModel(ocrResult);
+
+      
 
     }
     const end = async () => {
@@ -93,7 +88,6 @@ document.addEventListener('DOMContentLoaded', () => {
         start();
       }
     });
-  }
   initialize();
   
 });
