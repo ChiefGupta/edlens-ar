@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const mindarThree = new window.MINDAR.IMAGE.MindARThree({
       container: document.body,
       imageTargetSrc: './assets/targets/musicband.mind',
-      maxTrack: 2,
+      maxTrack: 5,
     });
     const {renderer, scene, camera} = mindarThree;
 
@@ -28,8 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
     bearAnchor.group.add(bear.scene);
 
     await mindarThree.start();
-    // let frame = captureVideoFrame(camera, "png");
-    // handwritingOCR(frame);
+    let frame = captureVideoFrame("video", "png");
+    writtenOCR(frame);
     renderer.setAnimationLoop(() => {
       renderer.render(scene, camera);
     });
@@ -39,9 +39,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Capture video frame
 function captureVideoFrame(video, format) {
-
+  if (typeof video === 'string') {
+    video = document.querySelector(video);
+  }
   format = format || 'jpeg';
 
+  if (!video || (format !== 'png' && format !== 'jpeg')) {
+    return false;
+  }
   let canvas = document.createElement("CANVAS");
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
@@ -67,10 +72,9 @@ function captureVideoFrame(video, format) {
   };
 };
 
-// Text/Handwriting OCR API
-function handwritingOCR(frame) {
+// OCR API
+function writtenOCR(frame) {
   fetch('https://hf.space/embed/tomofi/MaskTextSpotterV3-OCR/+/api/predict/', {
-      //fetch('https://vision.googleapis.com/v1/images:annotate?key=AIzaSyAUoNOlhCK2chd2UJGOZA4uYEHxztzuh4M', {
       method: "POST",
       body: JSON.stringify({
           "data": ["data:" + frame]
@@ -99,29 +103,12 @@ function handwritingOCR(frame) {
                   case "TAJMAHAL":
                   case "Tajmahal":
                   case "tajmahal":
-                      //container.setAttribute("style", "visibility: visible");
-                      //recognized.setAttribute("style", "visibility: visible");
-                      //let ctx = recognized.getContext("2d");
-                      //let img = document.getElementById("imgTaj");
-                      //ctx.drawImage(img, 100, 100);
                       recognized.innerHTML = "Monument: " + result;
-                      //document.getElementById("modelid").setAttribute("model", "");
-                      //document.getElementById("modelid").setAttribute("model", "molId:pdb:" + result);
-                      //document.getElementById("modelid").setAttribute("model" + result);
-
-
-                      // code block
                       break;
                   default:
                       recognized.innerHTML = "I see: " + result;
                   // code block
               }
-
-              // Change molecular structure based on pbd ID
-              //document.getElementById("molStructure").setAttribute("glmol", "");
-              //document.getElementById("molStructure").setAttribute("glmol", "molId:pdb:" + result);
-
-
               setTimeout(() => {
                   container.setAttribute("style", "visibility: hidden");
                   recognized.setAttribute("style", "visibility: hidden");
