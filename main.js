@@ -1,11 +1,12 @@
 import {loadGLTF} from "./libs/loader.js";
+
 const THREE = window.MINDAR.IMAGE.THREE;
 
 document.addEventListener('DOMContentLoaded', () => {
   const start = async() => {
-    // let frame = captureVideoFrame("video", "png");
-    // frame = frame.dataUri;
-    // let ocrResult = writtenOCR(frame);
+    let frame = captureVideoFrame("video", "png");
+    frame = frame.dataUri;
+    let ocrResult = writtenOCR(frame);
     const mindarThree = new window.MINDAR.IMAGE.MindARThree({
       container: document.body,
       imageTargetSrc: './assets/targets/kanjimarker.mind',
@@ -16,20 +17,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const light = new THREE.HemisphereLight( 0xffffff, 0xbbbbff, 1 );
     scene.add(light);
 
-    let ocrResult = "Tajmahal";
-    if(ocrResult == "Tajmahal"){
-      const raccoon = await loadGLTF('./assets/models/musicband-raccoon/scene.gltf');
-      raccoon.scene.scale.set(0.1, 0.1, 0.1);
+    switch(ocrResult){
+      case "Fox" : 
+      const raccoon = await loadGLTF('./assets/models/Fox.gltf');
+      raccoon.scene.scale.set(0.01, 0.01, 0.01);
       raccoon.scene.position.set(0, -0.4, 0);
       const raccoonAnchor = mindarThree.addAnchor(0);
-      raccoonAnchor.group.add(raccoon.scene);
-    }
-    else{
-      const bear = await loadGLTF('./assets/models/musicband-bear/scene.gltf');
-      bear.scene.scale.set(0.1, 0.1, 0.1);
+      raccoonAnchor.group.add(raccoon.scene)
+      break;
+
+      case "Duck" : 
+      const bear = await loadGLTF('./assets/models/Duck.gltf');
+      bear.scene.scale.set(0.7, 0.7, 0.7);
       bear.scene.position.set(0, -0.4, 0);
-      const bearAnchor = mindarThree.addAnchor(1);
+      const bearAnchor = mindarThree.addAnchor(0);
       bearAnchor.group.add(bear.scene);
+      break;
     }
 
     await mindarThree.start();
@@ -78,10 +81,11 @@ function captureVideoFrame(video, format) {
 // OCR API
 function writtenOCR(frame) {
   fetch('https://hf.space/embed/tomofi/MaskTextSpotterV3-OCR/+/api/predict/', {
+  // fetch('https://vision.googleapis.com/v1/images:annotate?key=AIzaSyAUoNOlhCK2chd2UJGOZA4uYEHxztzuh4M', {
       method: "POST",
       body: JSON.stringify({
-          "data": ["data:" + frame]
-      }),
+        "data": ["data:" + frame]
+    }),
       headers: {
           "Content-Type": "application/json"
       }
@@ -91,18 +95,19 @@ function writtenOCR(frame) {
       })
       .then(function (json_response) {
           let arrayLength = json_response.data[1].data;
+          
           console.log("arrayLength is: " + arrayLength);
-          // if (arrayLength == 0) {
-          //     // recognized.innerHTML = "Please scan one more time...";
+          if (arrayLength == 0) {
+            window.location.reload();
+              // recognized.innerHTML = "Please scan one more time...";
           //     setTimeout(() => {
           //         container.setAttribute("style", "visibility: hidden");
           //         recognized.setAttribute("style", "visibility: hidden");
           //     }, 2000);
           // } else {
-
-          let result = json_response.data[1].data[0][0];
-          console.log("OCR is: " + result);
-          return result;
+              let result = json_response.data[1].data[0][0];
+              console.log("OCR is: " + result);
+              return result;
 
           //     switch (result) {
           //         case "TAJMAHAL":
@@ -119,5 +124,5 @@ function writtenOCR(frame) {
           //         recognized.setAttribute("style", "visibility: hidden");
           //     }, 2000);
           // }
-      })
+      }})
 }
