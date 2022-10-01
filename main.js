@@ -1,15 +1,14 @@
-import * as THREE from './libs/three.js-r132/build/three.module.js';
+import * as THREE from './libs/three.js-r132/build/three.module.js'
 import { GLTFLoader } from './libs/three.js-r132/examples/jsm/loaders/GLTFLoader.js'
-import { ARButton } from './libs/three.js-r132/examples/jsm/webxr/ARButton.js'
+// import { ARButton } from './libs/three.js-r132/examples/jsm/webxr/ARButton.js'
 
 document.addEventListener('DOMContentLoaded', () => {
   const initialize = async () => {
-    // let frame = captureVideoFrame("video", "png");
-    // frame = frame.dataUri;
-    // let ocrResult = writtenOCR(frame);
+    let frame = captureVideoFrame("video", "png");
+    frame = frame.dataUri;
+    let ocrResult = writtenOCR(frame);
 
     // create AR object
-
     const arButton = document.querySelector("#ar-button");
 
     // check and request webxr session 
@@ -29,14 +28,19 @@ document.addEventListener('DOMContentLoaded', () => {
     renderer.setPixelRatio(window.devicePixelRatio);
     document.body.appendChild(renderer.domElement);
 
-    // create AR object
     const loader = new GLTFLoader();
-    loader.load('./assets/models/Duck.gltf', function (gltf) {
-      let duck = gltf.scene.children[0];
-      duck.scale.set(0.01, 0.01, 0.01);
-      duck.position.set(0, -5, -5);
-      scene.add(gltf.scene);
-    });
+    
+    ocrResult = ocrResult.toLowerCase();
+    switch (ocrResult) {
+      case 'duck':
+        loader.load('./assets/models/Duck.gltf', function (gltf) {
+          let duck = gltf.scene.children[0];
+          duck.scale.set(0.01, 0.01, 0.01);
+          duck.position.set(0, -5, -5);
+          scene.add(gltf.scene);
+        });
+        break;
+    }
 
     const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
     scene.add(light);
@@ -77,7 +81,6 @@ document.addEventListener('DOMContentLoaded', () => {
         start();
       }
     });
-
   }
   initialize();
 });
